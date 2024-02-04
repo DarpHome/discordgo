@@ -3472,14 +3472,7 @@ func (s *Session) Entitlements(appID, userID string, skuIDs []string, beforeID, 
 		v.Set("user_id", userID)
 	}
 	if len(skuIDs) > 0 {
-		t := strings.Builder{}
-		for i, d := range skuIDs {
-			if i > 0 {
-				t.WriteRune(',')
-			}
-			t.WriteString(d)
-		}
-		v.Set("sku_ids", t.String())
+		v.Set("sku_ids", strings.Join(skuIDs, ","))
 	}
 	if beforeID != "" {
 		v.Set("before", beforeID)
