@@ -235,6 +235,9 @@ type Interaction struct {
 
 	Token   string `json:"token"`
 	Version int    `json:"version"`
+
+	// For monetized apps, any entitlements for the invoking user, representing access to premium SKUs
+	Entitlements []*Entitlement `json:"entitlements"`
 }
 
 type interaction Interaction
@@ -538,6 +541,8 @@ const (
 	InteractionApplicationCommandAutocompleteResult InteractionResponseType = 8
 	// InteractionResponseModal is for responding to an interaction with a modal window.
 	InteractionResponseModal InteractionResponseType = 9
+	// InteractionResponsePremiumRequired is for responding to an interaction with an upgrade button. Available for apps with monetization enabled only.
+	InteractionResponsePremiumRequired InteractionResponseType = 10
 )
 
 // InteractionResponse represents a response for an interaction event.

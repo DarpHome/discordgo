@@ -406,3 +406,18 @@ type AutoModerationActionExecution struct {
 type GuildAuditLogEntryCreate struct {
 	*AuditLogEntry
 }
+
+// EntitlementCreate is the data for a EntitlementCreate event.
+type EntitlementCreate struct {
+	*Entitlement
+}
+
+// EntitlementUpdate is the data for a EntitlementUpdate event.
+type EntitlementUpdate struct {
+	*Entitlement
+}
+
+// EntitlementDelete is the data for a EntitlementDelete event.
+type EntitlementDelete struct {
+	*Entitlement
+}

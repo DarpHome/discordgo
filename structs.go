@@ -1512,7 +1512,7 @@ type Member struct {
 
 // Mention creates a member mention
 func (m *Member) Mention() string {
-	return "<@!" + m.User.ID + ">"
+	return "<@" + m.User.ID + ">"
 }
 
 // AvatarURL returns the URL of the member's avatar
@@ -2249,6 +2249,77 @@ const (
 	// StageInstancePrivacyLevelGuildOnly The Stage instance is visible to only guild members.
 	StageInstancePrivacyLevelGuildOnly StageInstancePrivacyLevel = 2
 )
+
+// SKUType represents the type of a SKU
+// https://discord.com/developers/docs/monetization/skus#sku-object-sku-types
+type SKUType int
+
+// Block containing known SKUType values.
+const (
+	// SKUTypeSubscription represents a recurring subscription.
+	SKUTypeSubscription SKUType = 5
+	// SKUFlagAvailable represents system-generated group for each SUBSCRIPTION SKU created.
+	SKUTypeSubscriptionGroup SKUType = 6
+)
+
+// SKUFlags represents flags of a SKU.
+// https://discord.com/developers/docs/monetization/skus#sku-object-sku-flags
+type SKUFlags int
+
+// Block containing known SKUFlags values.
+const (
+	// SKUFlagAvailable indicates whether SKU is available for purchase.
+	SKUFlagAvailable SKUFlags = 1 << 1
+	// SKUFlagAvailable indicates whether recurring SKU that can be purchased by a user and applied to a single server. Grants access to every user in that server.
+	SKUFlagGuildSubscription SKUFlags = 1 << 7
+	// SKUFlagAvailable indicates whether recurring SKU purchased by a user for themselves. Grants access to the purchasing user in every server.
+	SKUFlagUserSubscription SKUFlags = 1 << 8
+)
+
+type SKU struct {
+	// ID of SKU
+	ID string `json:"id"`
+	// Type of SKU
+	Type SKUType `json:"type"`
+	// ID of the parent application
+	ApplicationID string `json:"application_id"`
+	// Customer-facing name of your premium offering
+	Name string `json:"name"`
+	// System-generated URL slug based on the SKU's name
+	Slug string `json:"slug"`
+	// SKU flags combined as a bitfield
+	Flags SKUFlags `json:"flags"`
+}
+
+// EntitlementType represents the type of a Entitlement
+// https://discord.com/developers/docs/monetization/entitlements#entitlement-object-entitlement-types
+type EntitlementType int
+
+const (
+	// EntitlementTypeApplicationSubscription Entitlement was purchased as an app subscription.
+	EntitlementTypeApplicationSubscription EntitlementType = 8
+)
+
+type Entitlement struct {
+	// ID of the entitlement
+	ID string `json:"id"`
+	// ID of the SKU
+	SKUID string `json:"sku_id"`
+	// ID of the parent application
+	ApplicationID string `json:"application_id"`
+	// ID of the user that is granted access to the entitlement's sku
+	UserID string `json:"user_id"`
+	// Type of entitlement
+	Type EntitlementType `json:"type"`
+	// Entitlement was deleted
+	Deleted bool `json:"deleted"`
+	// Start date at which the entitlement is valid. Not present when using test entitlements.
+	StartsAt *time.Time `json:"starts_at"`
+	// Date at which the entitlement is no longer valid. Not present when using test entitlements.
+	EndsAt *time.Time `json:"ends_at"`
+	// ID of the guild that is granted access to the entitlement's sku
+	GuildID string `json:"guild_id"`
+}
 
 // Constants for the different bit offsets of text channel permissions
 const (

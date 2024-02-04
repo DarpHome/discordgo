@@ -220,4 +220,8 @@ var (
 	EndpointOauth2Application       = EndpointOAuth2Application
 	EndpointOauth2ApplicationsBot   = EndpointOAuth2ApplicationsBot
 	EndpointOauth2ApplicationAssets = EndpointOAuth2ApplicationAssets
+
+	EndpointApplicationSKUs         = func(aID string) string { return EndpointApplication(aID + "/skus") }
+	EndpointApplicationEntitlements = func(aID string) string { return EndpointApplication(aID + "/entitlements") }
+	EndpointApplicationEntitlement  = func(aID string, eID string) string { return EndpointApplicationEntitlements(aID) + "/" + eID }
 )

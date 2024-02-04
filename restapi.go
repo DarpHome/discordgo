@@ -3449,3 +3449,105 @@ func (s *Session) UserApplicationRoleConnectionUpdate(appID string, rconn *Appli
 	err = unmarshal(body, &st)
 	return
 }
+
+// Returns all SKUs for a given application. Because of how our SKU and subscription systems work, you will see two SKUs for your premium offering. For integration and testing entitlements, you should use the SKU with `type: 5`.
+func (s *Session) SKUs(appID string, options ...RequestOption) (a []*SKU, err error) {
+	endpoint := EndpointApplicationSKUs(appID)
+
+	body, err := s.RequestWithBucketID("GET", endpoint, nil, endpoint, options...)
+	if err != nil {
+		return
+	}
+
+	err = unmarshal(body, &a)
+	return
+}
+
+// Returns all entitlements for a given app, active and expired.
+func (s *Session) Entitlements(appID, userID string, skuIDs []string, beforeID, afterID string, limit int, guildID string, excludeEnded *bool, options ...RequestOption) (a []*Entitlement, err error) {
+	uri := EndpointApplicationEntitlements(appID)
+
+	v := url.Values{}
+	if userID != "" {
+		v.Set("user_id", userID)
+	}
+	if len(skuIDs) > 0 {
+		t := strings.Builder{}
+		for i, d := range skuIDs {
+			if i > 0 {
+				t.WriteRune(',')
+			}
+			t.WriteString(d)
+		}
+		v.Set("sku_ids", t.String())
+	}
+	if beforeID != "" {
+		v.Set("before", beforeID)
+	}
+	if afterID != "" {
+		v.Set("after", afterID)
+	}
+	if limit > 0 {
+		v.Set("limit", strconv.Itoa(limit))
+	}
+	if guildID != "" {
+		v.Set("guild_id", guildID)
+	}
+	if excludeEnded != nil {
+		b := "false"
+		if *excludeEnded {
+			b = "true"
+		}
+		v.Set("exclude_ended", b)
+	}
+	if len(v) > 0 {
+		uri += "?" + v.Encode()
+	}
+
+	body, err := s.RequestWithBucketID("GET", uri, nil, EndpointApplicationEntitlements(appID), options...)
+	if err != nil {
+		return
+	}
+
+	err = unmarshal(body, &a)
+	return
+}
+
+type TestEntitlementOwnerType int
+
+const (
+	TestEntitlementOwnerTypeGuild = 1
+	TestEntitlementOwnerTypeUser  = 2
+)
+
+type TestEntitlementCreate struct {
+	// ID of the SKU to grant the entitlement to
+	SKUID string `json:"sku_id"`
+	// ID of the guild or user to grant the entitlement to
+	OwnerID string `json:"owner_id"`
+	// 1 for a guild subscription, 2 for a user subscription
+	OwnerType TestEntitlementOwnerType `json:"owner_type"`
+}
+
+// Creates a test entitlement to a given SKU for a given guild or user. Discord will act as though that user or guild has entitlement to your premium offering.
+// After creating a test entitlement, you'll need to reload your Discord client. After doing so, you'll see that your server or user now has premium access.
+func (s *Session) TestEntitlementCreate(appID string, params TestEntitlementCreate, options ...RequestOption) (e *Entitlement, err error) {
+	endpoint := EndpointApplicationEntitlements(appID)
+	body, err := s.RequestWithBucketID("POST", endpoint, params, endpoint, options...)
+	if err != nil {
+		return
+	}
+
+	err = unmarshal(body, &e)
+	return
+}
+
+// Deletes a currently-active test entitlement. Discord will act as though that user or guild no longer has entitlement to your premium offering.
+func (s *Session) TestEntitlementDelete(appID, entitlementID string, options ...RequestOption) error {
+	endpoint := EndpointApplicationEntitlement(appID, entitlementID)
+	_, err := s.RequestWithBucketID("DELETE", endpoint, nil, endpoint, options...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
