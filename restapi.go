@@ -1162,9 +1162,9 @@ func (s *Session) GuildRoleDelete(guildID, roleID string, options ...RequestOpti
 
 // GuildPruneCount Returns the number of members that would be removed in a prune operation.
 // Requires 'KICK_MEMBER' permission.
-// guildID	: The ID of a Guild.
-// days		: The number of days to count prune for (1 or more).
-func (s *Session) GuildPruneCount(guildID string, days uint32, options ...RequestOption) (count uint32, err error) {
+// guildID		: The ID of a Guild.
+// days			: The number of days to count prune for (1 or more).
+func (s *Session) GuildPruneCount(guildID string, days uint32, includeRoles []string, options ...RequestOption) (count uint32, err error) {
 	count = 0
 
 	if days <= 0 {
@@ -1176,7 +1176,17 @@ func (s *Session) GuildPruneCount(guildID string, days uint32, options ...Reques
 		Pruned uint32 `json:"pruned"`
 	}{}
 
-	uri := EndpointGuildPrune(guildID) + "?days=" + strconv.FormatUint(uint64(days), 10)
+	uri := EndpointGuildPrune(guildID)
+	v := url.Values{}
+	if days > 0 {
+		v.Set("days", strconv.FormatUint(uint64(days), 10))
+	}
+	if len(includeRoles) > 0 {
+		v.Set("include_roles", strings.Join(includeRoles, ","))
+	}
+	if len(v) > 0 {
+		uri += v.Encode()
+	}
 	body, err := s.RequestWithBucketID("GET", uri, nil, EndpointGuildPrune(guildID), options...)
 	if err != nil {
 		return
@@ -1196,7 +1206,7 @@ func (s *Session) GuildPruneCount(guildID string, days uint32, options ...Reques
 // Returns an object with one 'pruned' key indicating the number of members that were removed in the prune operation.
 // guildID	: The ID of a Guild.
 // days		: The number of days to count prune for (1 or more).
-func (s *Session) GuildPrune(guildID string, days uint32, options ...RequestOption) (count uint32, err error) {
+func (s *Session) GuildPrune(guildID string, days uint32, computePruneCount bool, includeRoles []string, options ...RequestOption) (count uint32, err error) {
 
 	count = 0
 
@@ -1206,8 +1216,10 @@ func (s *Session) GuildPrune(guildID string, days uint32, options ...RequestOpti
 	}
 
 	data := struct {
-		days uint32
-	}{days}
+		Days              uint32   `json:"days"`
+		ComputePruneCount bool     `json:"compute_prune_count"`
+		IncludeRoles      []string `json:"include_roles,omitempty"`
+	}{days, computePruneCount, includeRoles}
 
 	p := struct {
 		Pruned uint32 `json:"pruned"`
