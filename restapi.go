@@ -3480,7 +3480,7 @@ func (s *Session) SKUs(appID string, options ...RequestOption) (a []*SKU, err er
 }
 
 // Returns all entitlements for a given app, active and expired.
-func (s *Session) Entitlements(appID, userID string, skuIDs []string, beforeID, afterID string, limit int, guildID string, excludeEnded *bool, options ...RequestOption) (a []*Entitlement, err error) {
+func (s *Session) Entitlements(appID, userID string, skuIDs []string, beforeID, afterID string, limit int, guildID string, excludeEnded bool, options ...RequestOption) (a []*Entitlement, err error) {
 	uri := EndpointApplicationEntitlements(appID)
 
 	v := url.Values{}
@@ -3502,12 +3502,8 @@ func (s *Session) Entitlements(appID, userID string, skuIDs []string, beforeID, 
 	if guildID != "" {
 		v.Set("guild_id", guildID)
 	}
-	if excludeEnded != nil {
-		b := "false"
-		if *excludeEnded {
-			b = "true"
-		}
-		v.Set("exclude_ended", b)
+	if excludeEnded {
+		v.Set("exclude_ended", "true")
 	}
 	if len(v) > 0 {
 		uri += "?" + v.Encode()
@@ -3525,24 +3521,22 @@ func (s *Session) Entitlements(appID, userID string, skuIDs []string, beforeID, 
 type TestEntitlementOwnerType int
 
 const (
-	TestEntitlementOwnerTypeGuild = 1
-	TestEntitlementOwnerTypeUser  = 2
+	TestEntitlementOwnerGuild = 1
+	TestEntitlementOwnerUser  = 2
 )
-
-type TestEntitlementCreate struct {
-	// ID of the SKU to grant the entitlement to
-	SKUID string `json:"sku_id"`
-	// ID of the guild or user to grant the entitlement to
-	OwnerID string `json:"owner_id"`
-	// 1 for a guild subscription, 2 for a user subscription
-	OwnerType TestEntitlementOwnerType `json:"owner_type"`
-}
 
 // Creates a test entitlement to a given SKU for a given guild or user. Discord will act as though that user or guild has entitlement to your premium offering.
 // After creating a test entitlement, you'll need to reload your Discord client. After doing so, you'll see that your server or user now has premium access.
-func (s *Session) TestEntitlementCreate(appID string, params TestEntitlementCreate, options ...RequestOption) (e *Entitlement, err error) {
+func (s *Session) TestEntitlementCreate(appID, skuID, ownerID string, ownerType TestEntitlementOwnerType, options ...RequestOption) (e *Entitlement, err error) {
 	endpoint := EndpointApplicationEntitlements(appID)
-	body, err := s.RequestWithBucketID("POST", endpoint, params, endpoint, options...)
+
+	data := struct {
+		SKUID     string                   `json:"sku_id"`
+		OwnerID   string                   `json:"owner_id"`
+	        OwnerType TestEntitlementOwnerType `json:"owner_type"`
+	}{skuID, ownerID, ownerType}
+	
+	body, err := s.RequestWithBucketID("POST", endpoint, data, endpoint, options...)
 	if err != nil {
 		return
 	}
