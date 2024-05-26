@@ -405,6 +405,7 @@ type AutoModerationActionExecution struct {
 // GuildAuditLogEntryCreate is the data for a GuildAuditLogEntryCreate event.
 type GuildAuditLogEntryCreate struct {
 	*AuditLogEntry
+	GuildID string `json:"guild_id"`
 }
 
 // EntitlementCreate is the data for a EntitlementCreate event.
